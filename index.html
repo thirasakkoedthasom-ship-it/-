@@ -41,6 +41,9 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .preview{position:sticky;top:12px}
 canvas{display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
 .prevhd{display:flex;justify-content:space-between;color:var(--sub);font-size:.85rem;margin:0 0 8px}
+canvas.pan{touch-action:none;cursor:grab;outline:3px solid var(--gold)}
+#panBtn{width:100%;margin:0 0 10px;padding:10px 14px}
+#panBtn[aria-pressed="true"]{background:var(--navy2);color:#fff;border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -55,7 +58,7 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;border:1px solid v
     <div class="lbl">2. รูปภาพ <span class="count" id="cnt">0/4</span></div>
     <label class="pick" id="pickLbl"><input type="file" id="file" accept="image/*" multiple>เลือกรูปภาพ (1–4 รูป)</label>
     <div class="thumbs" id="thumbs"></div>
-    <p class="hint">ใช้เมาส์ลากบนภาพตัวอย่างเพื่อเลื่อนตำแหน่งรูปในแต่ละช่อง</p>
+    <p class="hint">เลื่อนตำแหน่งรูป: คอมพิวเตอร์ใช้เมาส์ลากบนภาพตัวอย่าง มือถือกดปุ่ม “เปิดโหมดเลื่อนรูป” เหนือภาพแล้วลากนิ้ว</p>
 
     <label for="body">3. รายละเอียด (แสดงในกรอบด้านล่าง)</label>
     <textarea id="body" placeholder="พิมพ์รายละเอียดการปฏิบัติ ขึ้นบรรทัดใหม่ได้ ตัวอักษรจะย่อให้พอดีกรอบอัตโนมัติ"></textarea>
@@ -69,6 +72,7 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;border:1px solid v
 
   <section class="preview">
     <div class="prevhd"><span>ภาพตัวอย่าง</span><span>ขนาดไฟล์ 1055 × 1491 px</span></div>
+    <button class="ghost" id="panBtn" type="button" aria-pressed="false">✋ เปิดโหมดเลื่อนรูป (สำหรับมือถือ)</button>
     <canvas id="cv" width="1055" height="1491" aria-label="ภาพตัวอย่างรายงาน"></canvas>
   </section>
 </main>
@@ -205,10 +209,11 @@ $('reset').onclick=()=>{
 };
 
 /* drag to pan (mouse / pen) */
-let drag=null;
+let drag=null,panOn=false;
+$('panBtn').onclick=()=>{panOn=!panOn;cv.classList.toggle('pan',panOn);$('panBtn').setAttribute('aria-pressed',panOn);$('panBtn').textContent=panOn?'✋ ปิดโหมดเลื่อนรูป (กลับไปเลื่อนหน้าจอได้)':'✋ เปิดโหมดเลื่อนรูป (สำหรับมือถือ)'};
 function pos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
 cv.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='touch'||!photos.length)return;
+  if((e.pointerType==='touch'&&!panOn)||!photos.length)return;
   const[x,y]=pos(e);
   const i=lastCells.findIndex(([cx,cy,cw,ch])=>x>=cx&&x<=cx+cw&&y>=cy&&y<=cy+ch);
   if(i<0)return;
